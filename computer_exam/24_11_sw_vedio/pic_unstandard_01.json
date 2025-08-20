@@ -1,0 +1,367 @@
+{
+  "name": "pic_unstandard_01",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "图片提示词解析",
+        "formDescription": "请上传需要解析的图片内容,支持jpg、png、jpeg、webp格式",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "图片上传",
+              "fieldType": "file",
+              "acceptFileTypes": ".jpg,.png,.jpeg,.webp",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "模型选择",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "gemini-2.0-flash"
+                  },
+                  {
+                    "option": "gemini-2.5-flash"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "点击确认"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -688,
+        32
+      ],
+      "id": "e9802cee-b5ea-4b6e-8571-65623335a830",
+      "name": "文件上传",
+      "webhookId": "f29581c1-7172-469d-a62e-3c459695d164",
+      "executeOnce": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// 在 Code 节点中运行一次性所有 items\nlet results = [];\nfor (const item of $input.all()) {\n  for (const key of Object.keys(item.binary)) {\n    results.push({\n      json: item.json,\n      binary: { data: item.binary[key] },\n    });\n  }\n}\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        32
+      ],
+      "id": "4c05db3c-7fc0-4b12-87f9-38d48aa49fde",
+      "name": "文件遍历"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "include": "allOtherFields",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        32
+      ],
+      "id": "adc89120-eeb5-48a9-ae38-9efcce8f5835",
+      "name": "遍历-图片"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        32
+      ],
+      "id": "81cc8847-8207-4393-bb2d-326d850a02d8",
+      "name": "循环"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "=data",
+        "destinationKey": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        208,
+        144
+      ],
+      "id": "993bd47f-b428-43b8-821f-7449caa5cf94",
+      "name": "格式转换"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8a25f1ff-6418-4c1b-b5e6-20e5dd8f1ca9",
+              "name": "图片提示词",
+              "value": "=你现在是一位专业的AI绘画提示词工程师（AI Prompt Engineer）。你的核心任务是分析我提供给你的任何图片，并根据以下结构化的分析框架，为我生成一段高质量、详细的、适用于主流文生图模型（如 Midjourney, Stable Diffusion）的英文提示词和中文提示词。\n\n你的工作流程必须严格遵循以下步骤：\n第一步：对图片进行结构化分析\n你必须按照以下6个维度，用简短的中文短语对图片的关键元素进行拆解和描述：\n图像类型与核心主体 (Type & Subject): 首先判断这是照片、插画还是3D渲染等。然后详细描述画面的核心主体，包括人物（外貌、服饰、姿势、表情）、动物（品种、状态）或物体。\n环境与背景 (Environment & Background): 描述主体所在的具体场景（室内/室外，城市/自然）以及背景中的重要元素。\n构图与视角 (Composition & View): 描述画面的景别（特写、半身、全身、远景）和拍摄/绘制的视角（正面、低角度、俯视等）。\n光照与色彩 (Lighting & Color): 分析画面的光线类型（如柔和光、戏剧性光、逆光、黄金时刻）和整体的色调（如暖色调、冷色调、鲜艳、柔和）。\n艺术风格 (Art Style): 定义图片的整体艺术风格（如写实主义、赛博朋克、动漫风、水彩风），并尽可能联想一位风格相似的艺术家或平台（如梵高风格、宫崎骏风格、Artstation流行）。\n画质与细节 (Quality & Details): 描述图片的清晰度和细节程度（如高细节、逼真、8K）。\n\n第二步：生成最终的英文提示词和中文提示词 (Final Prompt)\n根据第一步的分析，将所有关键词和描述组合成一段流畅、连贯的英文提示词。\n使用逗号 , 分隔不同的描述词或短语。\n优先将最重要的描述（如主体和类型）放在前面。\n确保语法流畅，关键词准确。\n\n第三步：提供推荐的负向提示词 (Negative Prompt)\n根据图片内容，提供一组通用的、有助于提升画面质量的负-向提示词，用于排除不希望出现的元素。\n\n最终输出格式要求：\n你必须严格按照以下格式返回以下几部分内容，不得有任何偏差。\n【结构化分析】\n图像类型与核心主体: [你的分析结果]\n环境与背景: [你的分析结果]\n构图与视角: [你的分析结果]\n光照与色彩: [你的分析结果]\n艺术风格: [你的分析结果]\n画质与细节: [你的分析结果]\n【最终提示词】\n[这里是根据分析生成的、可直接复制使用的、完整的英文提示词]\n[这里是根据分析生成的、可直接复制使用的、完整的中文提示词]\n【推荐的负向提示词】\ndeformed, bad anatomy, disfigured, poorly drawn face, mutation, mutated, extra limb, ugly, disgusting, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blurry, ((((mutated hands and fingers)))), watermark, watermarked, oversaturated, censored, distorted hands, amputation, missing hands, obese, doubled face, dull, low-quality, text, bad-artist",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        144
+      ],
+      "id": "91ee56ff-52e5-4218-a06c-c7da6b2cb14f",
+      "name": "图片理解提示词"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $('文件上传').item.json['模型选择'] }}:generateContent?key=AIzaSyCA4IdUNqI_Azim_8_ZqXTif6F5-QU7MS8",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": {{ JSON.stringify($('图片理解提示词').item.json['图片提示词']) }}\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"image/jpeg\",\n            \"data\": \"{{ $('格式转换').item.json.data }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 1,\n    \"maxOutputTokens\": 65536\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        608,
+        144
+      ],
+      "id": "e48fe3db-3df2-4a31-81b1-198682614f0a",
+      "name": "图片内容"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f35182e8-40a0-4472-98e2-ed441b7efac6",
+              "name": "图片解析结果",
+              "value": "=<strong style=\"font-size-body: 30px;\">文件名:</strong>\n{{ $('遍历-图片').item.binary.data.fileName }}\n\n<strong style=\"font-size-body: 30px;\">解析结果:</strong>\n{{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        144
+      ],
+      "id": "a8e976cc-a62d-4d16-877e-bfd90cd75a9d",
+      "name": "图片内容TXT"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 创建一个空数组，用来存放所有 OCR 结果的文本\nconst allOcrResults = [];\n\n// 遍历所有输入的 items\nfor (const item of items) {\n  // 从每个 item 的 json 数据中，获取 \"图片解析结果\" 字段的值，并将其添加到数组中\n  allOcrResults.push(item.json.图片解析结果);\n}\n\n// 将数组中的所有文本用两个换行符连接成一个单一的、完整的字符串\nconst combinedText = allOcrResults.join('\\n\\n');\n\n// 返回一个全新的、只包含一个 item 的数组。\n// 这个 item 的 json 数据中有一个名为 \"mergedResult\" 的字段，其值为我们合并后的文本。\nreturn [\n  {\n    json: {\n      mergedResult: combinedText\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -48
+      ],
+      "id": "051c28bd-eac0-4825-ba59-522bd6c81ee5",
+      "name": "图片解析结果合并"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "mergedResult",
+        "options": {
+          "encoding": "utf8",
+          "fileName": "result.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        -48
+      ],
+      "id": "8913a8cd-f64b-4dcc-85f0-7bc1f2513fa4",
+      "name": "图片解析结果转文本"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "全部图片已处理完成",
+        "completionMessage": "=<pre>\n\n{{ $('图片解析结果合并').item.json.mergedResult }}\n\n</pre>",
+        "inputDataFieldName": "=data",
+        "options": {
+          "customCss": ":root {\n\t--font-family: 'Open Sans', sans-serif;\n\t--font-weight-normal: 400;\n\t--font-weight-bold: 600;\n\t--font-size-body: 12px;\n\t--font-size-label: 14px;\n\t--font-size-test-notice: 12px;\n\t--font-size-input: 14px;\n\t--font-size-header: 20px;\n\t--font-size-paragraph: 14px;\n\t--font-size-link: 12px;\n\t--font-size-error: 12px;\n\t--font-size-html-h1: 28px;\n\t--font-size-html-h2: 20px;\n\t--font-size-html-h3: 16px;\n\t--font-size-html-h4: 14px;\n\t--font-size-html-h5: 12px;\n\t--font-size-html-h6: 10px;\n\t--font-size-subheader: 14px;\n\n\t/* Colors */\n\t--color-background: #fbfcfe;\n\t--color-test-notice-text: #e6a23d;\n\t--color-test-notice-bg: #fefaf6;\n\t--color-test-notice-border: #f6dcb7;\n\t--color-card-bg: #ffffff;\n\t--color-card-border: #dbdfe7;\n\t--color-card-shadow: rgba(99, 77, 255, 0.06);\n\t--color-link: #7e8186;\n\t--color-header: #525356;\n\t--color-label: #555555;\n\t--color-input-border: #dbdfe7;\n\t--color-input-text: #71747A;\n\t--color-focus-border: rgb(90, 76, 194);\n\t--color-submit-btn-bg: #ff6d5a;\n\t--color-submit-btn-text: #ffffff;\n\t--color-error: #ea1f30;\n\t--color-required: #ff6d5a;\n\t--color-clear-button-bg: #7e8186;\n\t--color-html-text: #555;\n\t--color-html-link: #ff6d5a;\n\t--color-header-subtext: #7e8186;\n\n\t/* Border Radii */\n\t--border-radius-card: 8px;\n\t--border-radius-input: 6px;\n\t--border-radius-clear-btn: 50%;\n\t--card-border-radius: 8px;\n\n\t/* Spacing */\n\t--padding-container-top: 24px;\n\t--padding-card: 24px;\n\t--padding-test-notice-vertical: 12px;\n\t--padding-test-notice-horizontal: 24px;\n\t--margin-bottom-card: 16px;\n\t--padding-form-input: 12px;\n\t--card-padding: 24px;\n\t--card-margin-bottom: 16px;\n\n\t/* Dimensions */\n\t--container-width: 448px;\n\t--submit-btn-height: 48px;\n\t--checkbox-size: 18px;\n\n\t/* Others */\n\t--box-shadow-card: 0px 4px 16px 0px var(--color-card-shadow);\n\t--opacity-placeholder: 0.5;\n}\n\npre {\n  text-align: left;      /* 保持文本左对齐 */\n  white-space: pre-wrap; /* 允许自动换行 */\n  word-break: break-word;/* (可选) 强制长单词或链接断开换行 */\n}\n"
+        }
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -48
+      ],
+      "id": "31750ea6-9ada-48ee-8fa1-0d5a47239b83",
+      "name": "图片解析结果输出",
+      "webhookId": "03612b2c-b10b-4a00-a16c-a6414f49501c",
+      "retryOnFail": false,
+      "executeOnce": false,
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "文件上传": {
+      "main": [
+        [
+          {
+            "node": "文件遍历",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文件遍历": {
+      "main": [
+        [
+          {
+            "node": "遍历-图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "遍历-图片": {
+      "main": [
+        [
+          {
+            "node": "循环",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环": {
+      "main": [
+        [
+          {
+            "node": "图片解析结果合并",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "格式转换",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "格式转换": {
+      "main": [
+        [
+          {
+            "node": "图片理解提示词",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片理解提示词": {
+      "main": [
+        [
+          {
+            "node": "图片内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片内容": {
+      "main": [
+        [
+          {
+            "node": "图片内容TXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片内容TXT": {
+      "main": [
+        [
+          {
+            "node": "循环",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片解析结果合并": {
+      "main": [
+        [
+          {
+            "node": "图片解析结果转文本",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片解析结果转文本": {
+      "main": [
+        [
+          {
+            "node": "图片解析结果输出",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6a1073d9-aa68-4e43-8e72-a4e51f68fe4b",
+  "meta": {
+    "instanceId": "62daafbb47bc4e91910d92d22830a7434abba44e1e4b634cff658b198f12816d"
+  },
+  "id": "6QioYiWFYeMzyX1c",
+  "tags": []
+}
